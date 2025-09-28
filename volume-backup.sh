@@ -6,15 +6,15 @@ usage() {
   >&2 echo "Options:"
   >&2 echo "  -c <algorithm> chooose compression algorithm: bz2 (default), gz, xz, pigz, zstd and 0 (none)"
   >&2 echo "  -e <glob> exclude files or directories (only for backup operation)"
-  >&2 echo "  -f force overwrite even if target volume is not empty during restore"
+  >&2 echo "  -f Allow backing up empty volume or restoring into non-empty volume, overwriting its contents"
   >&2 echo "  -x <args> pass additional arguments to the Tar utility"
   >&2 echo "  -v verbose"
 }
 
 backup() {
-    if [ -z "$(ls -A /volume)" ]; then
-       >&2 echo "Volume is empty or missing, check if you specified a correct name"
-       exit 1
+    if [ -z "$FORCE" ] && [ -z "$(ls -A /volume)" ]; then
+        >&2 echo "Volume is empty or missing, check if you specified a correct name"
+        exit 1
     fi
 
     if ! [ "$ARCHIVE" == "-" ]; then
@@ -71,10 +71,6 @@ while getopts "h?vfc:e:x:" OPTION; do
         TAROPTS+=(--exclude $OPTARG)
         ;;
     f)
-        if [ "$OPERATION" != "restore" ]; then
-          usage
-          exit 1
-        fi
         FORCE=1
         ;;
     v)
